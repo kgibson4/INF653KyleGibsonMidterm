@@ -1,0 +1,10 @@
+RewriteEngine On
+RewriteBase /
+
+# 1. If the request is for an actual file or directory that exists, serve it directly
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+
+# 2. Otherwise, if the URL starts with api/, send it to the root index.php
+# The [QSA] flag ensures query strings (like ?id=1) are preserved
+RewriteRule ^api/(.*)$ index.php [QSA,L]

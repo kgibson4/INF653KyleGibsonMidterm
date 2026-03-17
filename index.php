@@ -1,11 +1,21 @@
 <?php
+header('Content-Type: application/json');
 
-declare(strict_types = 1);
+// 1. Check if we can reach the Database class
+include_once 'config/Database.php';
 
-echo '<pre>';
-print_r(getenv('SITE_URL'));
-echo '<br>';
-print_r($_SERVER);
-echo '</pre>';
+$database = new Database();
+$db = $database->connect();
 
-phpinfo();
+if ($db) {
+    echo json_encode([
+        "status" => "Success",
+        "message" => "Docker is running, .htaccess is routing, and I am connected to Render Postgres!"
+    ]);
+} else {
+    echo json_encode([
+        "status" => "Error",
+        "message" => "Server is up, but I cannot reach the Render Database. Check your .env file."
+    ]);
+}
+exit();
