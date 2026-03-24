@@ -18,7 +18,6 @@ class Category {
     }
 
     public function read_single() {
-        // Using named parameters for consistency
         $query = "SELECT id, category FROM " . $this->table . " WHERE id = :id LIMIT 1";
         $stmt = $this->conn->prepare($query);
         $stmt->bindParam(':id', $this->id);

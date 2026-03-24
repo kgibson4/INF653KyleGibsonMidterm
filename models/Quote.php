@@ -2,6 +2,8 @@
 class Quote {
     private $conn;
     private $table = 'quotes';
+    private $author_table = 'authors';
+    private $category_table = 'categories';
 
     public $id;
     public $quote;
@@ -20,9 +22,9 @@ class Quote {
                 q.quote,
                 a.author,
                 c.category
-            FROM quotes q
-            JOIN authors a ON q.author_id = a.id
-            JOIN categories c ON q.category_id = c.id
+            FROM " . $this->table . " q
+            JOIN " . $this->author_table . " a ON q.author_id = a.id
+            JOIN " . $this->category_table . " c ON q.category_id = c.id
         ";
 
         $conditions = [];
@@ -63,7 +65,7 @@ class Quote {
 
     public function create() {
         $query = "
-            INSERT INTO quotes (quote, author_id, category_id)
+            INSERT INTO " . $this->table . " (quote, author_id, category_id)
             VALUES (:quote, :author_id, :category_id)
             RETURNING id
         ";
@@ -111,7 +113,7 @@ class Quote {
     }
 
     public function delete() {
-        $query = "DELETE FROM quotes WHERE id = :id";
+        $query = "DELETE FROM " . $this->table . " WHERE id = :id";
         $stmt = $this->conn->prepare($query);
         $stmt->bindParam(':id', $this->id);
 
