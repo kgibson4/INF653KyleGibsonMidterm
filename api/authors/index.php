@@ -33,56 +33,81 @@ switch($method) {
 
     case 'POST':
         $data = json_decode(file_get_contents("php://input"));
-        if(!isset($data->author)) {
-            // Requirement: Missing Parameter check
+
+        // Requirement: Check for missing parameters
+        if(!isset($data->author) || empty(trim($data->author))) {
             echo json_encode(["message" => "Missing Required Parameters"]);
             return;
         }
+
         $author->author = $data->author;
+
         if($author->create()) {
-            echo json_encode(['id' => $author->id, 'author' => $author->author]);
+            // SUCCESS: Return a single JSON object { id: X, author: "Name" }
+            echo json_encode([
+                "id" => $author->id,
+                "author" => $author->author
+            ]);
+        } else {
+            echo json_encode(["message" => "Author could not be created."]);
         }
     break;
 
     case 'PUT':
         $data = json_decode(file_get_contents("php://input"));
-        
-        // Requirement: Must contain id and author
+
+        // 1. Check for missing parameters
         if(!isset($data->id) || !isset($data->author)) {
             echo json_encode(["message" => "Missing Required Parameters"]);
-            break;
+            return;
         }
 
         $author->id = $data->id;
         $author->author = $data->author;
 
-        // Requirement: Check if author exists. If not, return "author_id Not Found"
+        // 2. REQUIREMENT: Check if author exists first
+        // If not found, return "No Authors Found"
         if(!$author->read_single()->fetch()) {
-            echo json_encode(["message" => "author_id Not Found"]);
-            break;
+            echo json_encode(["message" => "No Authors Found"]);
+            return;
         }
 
+        // 3. Perform update and return the SINGLE OBJECT
         if($author->update()) {
-            echo json_encode(["id" => $author->id, "author" => $author->author]);
+            echo json_encode([
+                "id" => $author->id,
+                "author" => $author->author
+            ]);
+        } else {
+            echo json_encode(["message" => "Author could not be updated."]);
         }
     break;
 
     case 'DELETE':
         $data = json_decode(file_get_contents("php://input"));
+
+        // 1. Check for missing ID parameter
         if(!isset($data->id)) {
             echo json_encode(["message" => "Missing Required Parameters"]);
-            break;
+            return;
         }
+
         $author->id = $data->id;
 
-        // Requirement: Check if author exists. If not, return "author_id Not Found"
+        // 2. REQUIREMENT: Check if author exists first
+        // If not found, return "No Authors Found"
         if(!$author->read_single()->fetch()) {
-            echo json_encode(["message" => "author_id Not Found"]);
-            break;
+            echo json_encode(["message" => "No Authors Found"]);
+            return;
         }
 
+        // 3. Perform delete and return the SINGLE OBJECT {"id": X}
         if($author->delete()) {
-            echo json_encode(["id" => $author->id]);
+            echo json_encode([
+                "id" => $author->id
+            ]);
+        } else {
+            echo json_encode(["message" => "Author could not be deleted."]);
         }
     break;
 }
