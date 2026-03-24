@@ -10,10 +10,12 @@ class Quote {
     public $author_id;
     public $category_id;
 
+    // Constructor with DB
     public function __construct($db) {
         $this->conn = $db;
     }
 
+    // Get Quotes with optional filters
     public function read($params = []) {
 
         $query = "
@@ -67,6 +69,7 @@ class Quote {
         return $stmt;
     }
 
+    // Get Single Quote
     public function create() {
         $query = "
             INSERT INTO " . $this->table . " (quote, author_id, category_id)
@@ -76,18 +79,16 @@ class Quote {
 
         $stmt = $this->conn->prepare($query);
 
-        // Clean data
         $this->quote = htmlspecialchars(strip_tags($this->quote));
         $this->author_id = htmlspecialchars(strip_tags($this->author_id));
         $this->category_id = htmlspecialchars(strip_tags($this->category_id));
 
-        // Bind data
         $stmt->bindParam(':quote', $this->quote);
         $stmt->bindParam(':author_id', $this->author_id);
         $stmt->bindParam(':category_id', $this->category_id);
 
+        // Execute and fetch the returned ID
         if($stmt->execute()) {
-            // Fetch the ID returned by the RETURNING clause
             $row = $stmt->fetch(PDO::FETCH_ASSOC);
             $this->id = $row['id'];
             return true;
@@ -95,6 +96,7 @@ class Quote {
         return false;
     }
 
+    // Update Quote
     public function update() {
         $query = "
             UPDATE " . $this->table . "
@@ -106,13 +108,11 @@ class Quote {
 
         $stmt = $this->conn->prepare($query);
 
-        // Clean data
         $this->quote = htmlspecialchars(strip_tags($this->quote));
         $this->id = htmlspecialchars(strip_tags($this->id));
         $this->author_id = htmlspecialchars(strip_tags($this->author_id));
         $this->category_id = htmlspecialchars(strip_tags($this->category_id));
 
-        // Bind data
         $stmt->bindParam(':id', $this->id);
         $stmt->bindParam(':quote', $this->quote);
         $stmt->bindParam(':author_id', $this->author_id);
@@ -124,6 +124,7 @@ class Quote {
         return false;
     }
 
+    // Delete Quote
     public function delete() {
         $query = "DELETE FROM " . $this->table . " WHERE id = :id";
         $stmt = $this->conn->prepare($query);

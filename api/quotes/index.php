@@ -1,4 +1,5 @@
 <?php
+// Set headers to allow Cross-Origin Resource Sharing (CORS) and define JSON output
 header('Access-Control-Allow-Origin: *');
 header('Content-Type: application/json');
 header('Access-Control-Allow-Methods: GET, POST, PUT, DELETE');
@@ -17,6 +18,7 @@ $method = $_SERVER['REQUEST_METHOD'];
 switch($method) {
 
     case 'GET':
+        // Build an associative array of potential filters from the URL query string
         $params = [];
         if(isset($_GET['id'])) $params['id'] = $_GET['id'];
         if(isset($_GET['author_id'])) $params['author_id'] = $_GET['author_id'];
@@ -27,6 +29,7 @@ switch($method) {
         $num = $result->rowCount();
 
         if($num > 0) {
+            // Return a single object for specific ID or random requests; otherwise, return an array
             if(isset($_GET['id']) || (isset($_GET['random']) && $_GET['random'] === 'true')) {
                 $row = $result->fetch(PDO::FETCH_ASSOC);
                 echo json_encode($row);
@@ -43,13 +46,13 @@ switch($method) {
     case 'POST':
         $data = json_decode(file_get_contents("php://input"));
         
-        // 1. Check for required parameters
         if(!isset($data->quote) || !isset($data->author_id) || !isset($data->category_id)) {
             echo json_encode(["message" => "Missing Required Parameters"]);
             return;
         }
 
-        // 2. Validate author_id exists
+        // Relational Validation: Ensure the provided author_id actually exists in the authors table
+        $author = new Author($db);
         $author = new Author($db);
         $author->id = $data->author_id;
         if(!$author->read_single()->fetch()) {
@@ -57,7 +60,7 @@ switch($method) {
             return;
         }
 
-        // 3. Validate category_id exists
+        // Relational Validation: Ensure the provided category_id actually exists in the categories table
         $cat = new Category($db);
         $cat->id = $data->category_id;
         if(!$cat->read_single()->fetch()) {
@@ -65,13 +68,11 @@ switch($method) {
             return;
         }
 
-        // 4. Create the Quote
         $quote->quote = $data->quote;
         $quote->author_id = $data->author_id;
         $quote->category_id = $data->category_id;
 
         if($quote->create()) {
-            // SUCCESS: Return a single JSON object
             echo json_encode([
                 "id" => $quote->id,
                 "quote" => $quote->quote,
@@ -86,7 +87,6 @@ switch($method) {
     case 'PUT':
         $data = json_decode(file_get_contents("php://input"));
 
-        // 1. Check for missing parameters (must have all 4)
         if(!isset($data->id) || !isset($data->quote) || !isset($data->author_id) || !isset($data->category_id)) {
             echo json_encode(["message" => "Missing Required Parameters"]);
             return;
@@ -97,13 +97,12 @@ switch($method) {
         $quote->author_id = $data->author_id;
         $quote->category_id = $data->category_id;
 
-        // 2. REQUIREMENT: Check if the Quote ID exists first
+        // Quote existence must be verified before checking foreign key IDs
         if(!$quote->read(['id' => $quote->id])->fetch()) {
             echo json_encode(["message" => "No Quotes Found"]);
             return;
         }
-
-        // 3. REQUIREMENT: Check if author_id exists
+        // Check if author_id exists
         $author = new Author($db);
         $author->id = $data->author_id;
         if(!$author->read_single()->fetch()) {
@@ -111,7 +110,7 @@ switch($method) {
             return;
         }
 
-        // 4. REQUIREMENT: Check if category_id exists
+        // Check if category_id exists
         $cat = new Category($db);
         $cat->id = $data->category_id;
         if(!$cat->read_single()->fetch()) {
@@ -119,7 +118,7 @@ switch($method) {
             return;
         }
 
-        // 5. Perform the update and return the SINGLE OBJECT
+        // Perform the update and return the SINGLE OBJECT
         if($quote->update()) {
             echo json_encode([
                 "id" => $quote->id,
@@ -142,7 +141,6 @@ switch($method) {
 
         $quote->id = $data->id;
 
-        // Requirement: Check existence before deleting
         if(!$quote->read(['id' => $quote->id])->fetch()) {
             echo json_encode(["message" => "No Quotes Found"]);
             return;

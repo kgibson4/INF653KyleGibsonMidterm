@@ -1,4 +1,5 @@
 <?php
+// Set headers to allow Cross-Origin Resource Sharing (CORS) and define JSON output
 header('Access-Control-Allow-Origin: *');
 header('Content-Type: application/json');
 header('Access-Control-Allow-Methods: GET, POST, PUT, DELETE');
@@ -26,14 +27,15 @@ switch($method) {
             }
         } else {
             $result = $category->read();
+            // Return a simple indexed array of all category objects
             echo json_encode($result->fetchAll(PDO::FETCH_ASSOC));
         }
     break;
 
     case 'POST':
+        // Retrieve and decode raw JSON body from the input stream
         $data = json_decode(file_get_contents("php://input"));
 
-        // Requirement: Check for missing parameters
         if(!isset($data->category) || empty(trim($data->category))) {
             echo json_encode(["message" => "Missing Required Parameters"]);
             return;
@@ -42,7 +44,6 @@ switch($method) {
         $category->category = $data->category;
 
         if($category->create()) {
-            // SUCCESS: Return a single JSON object
             echo json_encode([
                 "id" => $category->id,
                 "category" => $category->category
@@ -55,7 +56,6 @@ switch($method) {
     case 'PUT':
         $data = json_decode(file_get_contents("php://input"));
 
-        // 1. Check for missing parameters
         if(!isset($data->id) || !isset($data->category)) {
             echo json_encode(["message" => "Missing Required Parameters"]);
             return;
@@ -64,14 +64,12 @@ switch($method) {
         $category->id = $data->id;
         $category->category = $data->category;
 
-        // 2. REQUIREMENT: Check if category exists first
-        // If not found, return "No Quotes Found" (as per your initial requirement)
+        // Perform existence check to satisfy specific error message requirements
         if(!$category->read_single()->fetch()) {
             echo json_encode(["message" => "No Quotes Found"]);
             return;
         }
 
-        // 3. Perform update and return the SINGLE OBJECT
         if($category->update()) {
             echo json_encode([
                 "id" => $category->id,
@@ -90,6 +88,7 @@ switch($method) {
         }
         $category->id = $data->id;
 
+        // Ensure record exists before deletion attempt
         if(!$category->read_single()->fetch()) {
             echo json_encode(["message" => "No Quotes Found"]);
             break;

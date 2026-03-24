@@ -1,4 +1,5 @@
 <?php
+// Set headers to allow Cross-Origin Resource Sharing (CORS) and define JSON output
 header('Access-Control-Allow-Origin: *');
 header('Content-Type: application/json');
 header('Access-Control-Allow-Methods: GET, POST, PUT, DELETE');
@@ -17,6 +18,7 @@ switch($method) {
         if(isset($_GET['id'])) {
             $author->id = $_GET['id'];
             $result = $author->read_single();
+            // Fetch as associative array to remove duplicate numeric indexes
             $row = $result->fetch(PDO::FETCH_ASSOC);
 
             if($row) {
@@ -31,9 +33,9 @@ switch($method) {
     break;
 
     case 'POST':
+        // Capture raw JSON data from the request body
         $data = json_decode(file_get_contents("php://input"));
 
-        // Requirement: Check for missing parameters
         if(!isset($data->author) || empty(trim($data->author))) {
             echo json_encode(["message" => "Missing Required Parameters"]);
             return;
@@ -42,7 +44,6 @@ switch($method) {
         $author->author = $data->author;
 
         if($author->create()) {
-            // SUCCESS: Return a single JSON object { id: X, author: "Name" }
             echo json_encode([
                 "id" => $author->id,
                 "author" => $author->author
@@ -55,7 +56,6 @@ switch($method) {
     case 'PUT':
         $data = json_decode(file_get_contents("php://input"));
 
-        // 1. Check for missing parameters
         if(!isset($data->id) || !isset($data->author)) {
             echo json_encode(["message" => "Missing Required Parameters"]);
             return;
@@ -64,14 +64,12 @@ switch($method) {
         $author->id = $data->id;
         $author->author = $data->author;
 
-        // 2. REQUIREMENT: Check if author exists first
-        // If not found, return "No Authors Found"
+        // Verify record existence before attempting update to meet project error-handling requirements
         if(!$author->read_single()->fetch()) {
             echo json_encode(["message" => "No Authors Found"]);
             return;
         }
 
-        // 3. Perform update and return the SINGLE OBJECT
         if($author->update()) {
             echo json_encode([
                 "id" => $author->id,
@@ -85,7 +83,6 @@ switch($method) {
     case 'DELETE':
         $data = json_decode(file_get_contents("php://input"));
 
-        // 1. Check for missing ID parameter
         if(!isset($data->id)) {
             echo json_encode(["message" => "Missing Required Parameters"]);
             return;
@@ -93,14 +90,12 @@ switch($method) {
 
         $author->id = $data->id;
 
-        // 2. REQUIREMENT: Check if author exists first
-        // If not found, return "No Authors Found"
+        // Check existence first to distinguish between "Not Found" and "Success"
         if(!$author->read_single()->fetch()) {
             echo json_encode(["message" => "No Authors Found"]);
             return;
         }
 
-        // 3. Perform delete and return the SINGLE OBJECT {"id": X}
         if($author->delete()) {
             echo json_encode([
                 "id" => $author->id
