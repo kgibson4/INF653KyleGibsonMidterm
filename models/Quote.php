@@ -3,111 +3,106 @@ class Quote {
     private $conn;
     private $table = 'quotes';
 
-    // Quote Properties
     public $id;
     public $quote;
     public $author_id;
     public $category_id;
-    
-    // These will hold the joined strings for the JSON response
-    public $author; 
-    public $category;
 
     public function __construct($db) {
         $this->conn = $db;
     }
 
-    // Get All Quotes
-    public function read() {
-        $query = 'SELECT 
-                a.author, 
-                c.category, 
-                q.id, 
-                q.quote, 
-                q.author_id, 
-                q.category_id
-            FROM ' . $this->table . ' q
-            LEFT JOIN authors a ON q.author_id = a.id
-            LEFT JOIN categories c ON q.category_id = c.id
-            ORDER BY q.id DESC';
+    public function read($params = []) {
+
+        $query = "
+            SELECT 
+                q.id,
+                q.quote,
+                a.author,
+                c.category
+            FROM quotes q
+            JOIN authors a ON q.author_id = a.id
+            JOIN categories c ON q.category_id = c.id
+        ";
+
+        $conditions = [];
+
+        if(isset($params['id'])) {
+            $conditions[] = "q.id = :id";
+        }
+
+        if(isset($params['author_id'])) {
+            $conditions[] = "q.author_id = :author_id";
+        }
+
+        if(isset($params['category_id'])) {
+            $conditions[] = "q.category_id = :category_id";
+        }
+
+        if(count($conditions) > 0) {
+            $query .= " WHERE " . implode(" AND ", $conditions);
+        }
 
         $stmt = $this->conn->prepare($query);
+
+        if(isset($params['id'])) {
+            $stmt->bindParam(':id', $params['id']);
+        }
+
+        if(isset($params['author_id'])) {
+            $stmt->bindParam(':author_id', $params['author_id']);
+        }
+
+        if(isset($params['category_id'])) {
+            $stmt->bindParam(':category_id', $params['category_id']);
+        }
+
         $stmt->execute();
         return $stmt;
     }
 
-    // Get Single Quote
-    public function read_single() {
-        $query = 'SELECT 
-                a.author, 
-                c.category, 
-                q.id, 
-                q.quote, 
-                q.author_id, 
-                q.category_id
-            FROM ' . $this->table . ' q
-            LEFT JOIN authors a ON q.author_id = a.id
-            LEFT JOIN categories c ON q.category_id = c.id
-            WHERE q.id = ?
-            LIMIT 1';
+    public function create() {
+        $query = "
+            INSERT INTO quotes (quote, author_id, category_id)
+            VALUES (:quote, :author_id, :category_id)
+            RETURNING id
+        ";
 
         $stmt = $this->conn->prepare($query);
-        $stmt->bindParam(1, $this->id);
-        $stmt->execute();
+        $stmt->bindParam(':quote', $this->quote);
+        $stmt->bindParam(':author_id', $this->author_id);
+        $stmt->bindParam(':category_id', $this->category_id);
 
-        $row = $stmt->fetch(PDO::FETCH_ASSOC);
-
-        if($row) {
-            $this->quote = $row['quote'];
-            $this->author = $row['author'];
-            $this->category = $row['category'];
-            $this->author_id = $row['author_id'];
-            $this->category_id = $row['category_id'];
+        if($stmt->execute()) {
+            $row = $stmt->fetch(PDO::FETCH_ASSOC);
+            $this->id = $row['id'];
             return true;
         }
         return false;
     }
 
-    // Create Quote
-    public function create() {
-        $query = 'INSERT INTO ' . $this->table . ' (quote, author_id, category_id) 
-                  VALUES (:quote, :author_id, :category_id)';
+    public function update() {
+        $query = "
+            UPDATE " . $this->table . "
+            SET quote = :quote,
+                author_id = :author_id,
+                category_id = :category_id
+            WHERE id = :id
+        ";
 
         $stmt = $this->conn->prepare($query);
 
         // Clean data
         $this->quote = htmlspecialchars(strip_tags($this->quote));
+        $this->id = htmlspecialchars(strip_tags($this->id));
         $this->author_id = htmlspecialchars(strip_tags($this->author_id));
         $this->category_id = htmlspecialchars(strip_tags($this->category_id));
 
         // Bind data
-        $stmt->bindParam(':quote', $this->quote);
-        $stmt->bindParam(':author_id', $this->author_id);
-        $stmt->bindParam(':category_id', $this->category_id);
-
-        if($stmt->execute()) {
-            return true;
-        }
-        return false;
-    }
-
-    // Update Quote
-    public function update() {
-        $query = 'UPDATE ' . $this->table . '
-                SET quote = :quote, author_id = :author_id, category_id = :category_id
-                WHERE id = :id';
-
-        $stmt = $this->conn->prepare($query);
-
-        $this->quote = htmlspecialchars(strip_tags($this->quote));
-        $this->author_id = htmlspecialchars(strip_tags($this->author_id));
-        $this->category_id = htmlspecialchars(strip_tags($this->category_id));
-        $this->id = htmlspecialchars(strip_tags($this->id));
-
-        $stmt->bindParam(':quote', $this->quote);
-        $stmt->bindParam(':author_id', $this->author_id);
-        $stmt->bindParam(':category_id', $this->category_id);
         $stmt->bindParam(':id', $this->id);
+        $stmt->bindParam(':quote', $this->quote);
+        $stmt->bindParam(':author_id', $this->author_id);
+        $stmt->bindParam(':category_id', $this->category_id);
 
         if($stmt->execute()) {
             return true;
@@ -115,16 +110,11 @@ class Quote {
         return false;
     }
 
-    // Delete Quote
     public function delete() {
-        $query = 'DELETE FROM ' . $this->table . ' WHERE id = :id';
+        $query = "DELETE FROM quotes WHERE id = :id";
         $stmt = $this->conn->prepare($query);
-        $this->id = htmlspecialchars(strip_tags($this->id));
         $stmt->bindParam(':id', $this->id);
 
-        if($stmt->execute()) {
-            return true;
-        }
-        return false;
+        return $stmt->execute();
     }
 }
