@@ -45,6 +45,10 @@ class Quote {
             $query .= " WHERE " . implode(" AND ", $conditions);
         }
 
+        if(isset($params['random']) && $params['random'] === 'true') {
+            $query .= " ORDER BY RANDOM() LIMIT 1";
+        }
+
         $stmt = $this->conn->prepare($query);
 
         if(isset($params['id'])) {

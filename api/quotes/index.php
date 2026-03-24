@@ -21,15 +21,20 @@ switch($method) {
         if(isset($_GET['id'])) $params['id'] = $_GET['id'];
         if(isset($_GET['author_id'])) $params['author_id'] = $_GET['author_id'];
         if(isset($_GET['category_id'])) $params['category_id'] = $_GET['category_id'];
+        
+        // Capture random parameter
+        if(isset($_GET['random'])) $params['random'] = $_GET['random'];
 
         $result = $quote->read($params);
         $num = $result->rowCount();
 
         if($num > 0) {
-            if(isset($_GET['id'])) {
+            // Requirement: Single ID or Random request returns a specific quote object
+            if(isset($_GET['id']) || (isset($_GET['random']) && $_GET['random'] === 'true')) {
                 $row = $result->fetch(PDO::FETCH_ASSOC);
                 echo json_encode($row);
             } else {
+                // Requirement: List returns all matching quotes array
                 echo json_encode($result->fetchAll(PDO::FETCH_ASSOC));
             }
         } else {
