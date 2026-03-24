@@ -1,42 +1,68 @@
-# Deploy with Docker
-## A Step-by-Step Guide
----
+# Quotes REST API
 
-### Author Links
+A full-stack RESTful API for managing a database of quotes, authors, and categories. Built with PHP and PostgreSQL, containerized with Docker, and deployed on Render.
 
-👋 Hello, I'm Dave Gray.
-
-📚 [My Courses](https://courses.davegray.codes/)
-
-✅ [Check out my YouTube Channel with hundreds of tutorials](https://www.youtube.com/DaveGrayTeachesCode).
-
-🚩 [Subscribe to my channel](https://bit.ly/3nGHmNn)
-
-💖 [Support My Content](https://patreon.com/davegray)
-
-🚀 Follow Me:
-
-- [Twitter](https://twitter.com/yesdavidgray)
-- [LinkedIn](https://www.linkedin.com/in/davidagray/)
-- [Blog](https://davegray.codes)
+## 🛠️ Tech Stack
+- **Backend:** PHP (Vanilla)
+- **Database:** PostgreSQL (Hosted on Render)
+- **Environment:** Docker & Docker Compose
+- **Routing:** Apache `.htaccess`
+- **Frontend:** HTML5/JavaScript (Dashboard for CRUD testing)
 
 ---
 
-### Description
-
-📺 [YouTube Video](https://youtu.be/NL23_cVq6XI) for this repository.
-
----
-
-### 🎓 Academic Honesty
-
-**DO NOT COPY FOR AN ASSIGNMENT** - Avoid plagiarism and adhere to the spirit of this [Academic Honesty Policy](https://www.freecodecamp.org/news/academic-honesty-policy/).
+## 📂 Project Structure
+- `/api` - Contains the API entry points for Authors, Categories, and Quotes.
+- `/models` - PHP classes handling database logic (CRUD).
+- `/config` - Database connection and environment configuration.
+- `index.php` - The root UI dashboard for interacting with the API.
 
 ---
 
-### 📚 Tutorial References
+## 📡 API Endpoints
 
-- 🔗 [Docker Hub PHP](https://hub.docker.com/_/php)
-- 🔗 [Render.com](https://render.com/)
+### 1. Authors
+| Method | Endpoint | Description |
+| :--- | :--- | :--- |
+| GET | `/api/authors/` | List all authors |
+| GET | `/api/authors/?id=X` | Get a specific author |
+| POST | `/api/authors/` | Create a new author |
+| PUT | `/api/authors/` | Update an existing author |
+| DELETE | `/api/authors/` | Delete an author |
 
+### 2. Categories
+| Method | Endpoint | Description |
+| :--- | :--- | :--- |
+| GET | `/api/categories/` | List all categories |
+| GET | `/api/categories/?id=X` | Get a specific category |
+| POST | `/api/categories/` | Create a new category |
+| PUT | `/api/categories/` | Update an existing category |
+| DELETE | `/api/categories/` | Delete a category |
 
+### 3. Quotes
+| Method | Endpoint | Description |
+| :--- | :--- | :--- |
+| GET | `/api/quotes/` | List all quotes |
+| GET | `/api/quotes/?id=X` | Get a specific quote |
+| GET | `/api/quotes/?author_id=X` | Filter quotes by author |
+| GET | `/api/quotes/?random=true` | Get a single random quote |
+| POST | `/api/quotes/` | Create a new quote |
+| PUT | `/api/quotes/` | Update an existing quote |
+| DELETE | `/api/quotes/` | Delete a quote |
+
+---
+
+## 🧪 Requirements & Error Handling
+- **Consistency:** All `POST`, `PUT`, and `DELETE` requests return a single JSON object.
+- **Validation:** Missing parameters trigger a `Missing Required Parameters` message.
+- **Integrity:** Creating or updating a quote requires valid `author_id` and `category_id` values; otherwise, a specific `Not Found` message is returned.
+- **PostgreSQL:** Uses `RETURNING id` for reliable ID retrieval in cloud environments.
+
+---
+
+## ⚙️ Local Setup (Docker)
+1. Clone the repository.
+2. Ensure you have a `.env` file with your Render Postgres credentials.
+3. Run the containers:
+   ```bash
+   docker-compose up -d

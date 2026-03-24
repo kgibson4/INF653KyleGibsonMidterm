@@ -27,13 +27,13 @@ switch($method) {
         $num = $result->rowCount();
 
         if($num > 0) {
-            
             if(isset($_GET['id']) || (isset($_GET['random']) && $_GET['random'] === 'true')) {
                 $row = $result->fetch(PDO::FETCH_ASSOC);
                 echo json_encode($row);
             } else {
-                // Requirement: List returns all matching quotes array
-                echo json_encode($result->fetchAll(PDO::FETCH_ASSOC));
+                
+                $quotes_arr = $result->fetchAll(PDO::FETCH_ASSOC);
+                echo json_encode($quotes_arr);
             }
         } else {
             echo json_encode(["message" => "No Quotes Found"]);
@@ -43,13 +43,13 @@ switch($method) {
     case 'POST':
         $data = json_decode(file_get_contents("php://input"));
         
-        // Requirement: Must contain quote, author_id, and category_id
+        // 1. Check for required parameters
         if(!isset($data->quote) || !isset($data->author_id) || !isset($data->category_id)) {
             echo json_encode(["message" => "Missing Required Parameters"]);
             return;
         }
 
-        // Requirement: Verify author_id exists
+        // 2. Validate author_id exists
         $author = new Author($db);
         $author->id = $data->author_id;
         if(!$author->read_single()->fetch()) {
@@ -57,7 +57,7 @@ switch($method) {
             return;
         }
 
-        // Requirement: Verify category_id exists
+        // 3. Validate category_id exists
         $cat = new Category($db);
         $cat->id = $data->category_id;
         if(!$cat->read_single()->fetch()) {
@@ -65,24 +65,28 @@ switch($method) {
             return;
         }
 
+        // 4. Create the Quote
         $quote->quote = $data->quote;
         $quote->author_id = $data->author_id;
         $quote->category_id = $data->category_id;
 
         if($quote->create()) {
+            // SUCCESS: Return a single JSON object
             echo json_encode([
                 "id" => $quote->id,
                 "quote" => $quote->quote,
                 "author_id" => $quote->author_id,
                 "category_id" => $quote->category_id
             ]);
+        } else {
+            echo json_encode(["message" => "Quote could not be created."]);
         }
     break;
 
     case 'PUT':
         $data = json_decode(file_get_contents("php://input"));
 
-        // 1. Check for missing parameters
+        // 1. Check for missing parameters (must have all 4)
         if(!isset($data->id) || !isset($data->quote) || !isset($data->author_id) || !isset($data->category_id)) {
             echo json_encode(["message" => "Missing Required Parameters"]);
             return;
@@ -94,7 +98,6 @@ switch($method) {
         $quote->category_id = $data->category_id;
 
         // 2. REQUIREMENT: Check if the Quote ID exists first
-        // We use an empty array for params because the ID is already set on the object
         if(!$quote->read(['id' => $quote->id])->fetch()) {
             echo json_encode(["message" => "No Quotes Found"]);
             return;
@@ -116,7 +119,7 @@ switch($method) {
             return;
         }
 
-        // 5. If all checks pass, perform the update
+        // 5. Perform the update and return the SINGLE OBJECT
         if($quote->update()) {
             echo json_encode([
                 "id" => $quote->id,
@@ -124,6 +127,8 @@ switch($method) {
                 "author_id" => $quote->author_id,
                 "category_id" => $quote->category_id
             ]);
+        } else {
+            echo json_encode(["message" => "Quote could not be updated."]);
         }
     break;
 
