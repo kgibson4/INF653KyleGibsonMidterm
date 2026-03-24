@@ -1,10 +1,18 @@
 RewriteEngine On
 RewriteBase /
 
-# 1. If the request is for an actual file or directory that exists, serve it directly
+# 1. Allow existing files (like CSS/JS) to load normally
 RewriteCond %{REQUEST_FILENAME} !-f
 RewriteCond %{REQUEST_FILENAME} !-d
 
-# 2. Otherwise, if the URL starts with api/, send it to the root index.php
-# The [QSA] flag ensures query strings (like ?id=1) are preserved
-RewriteRule ^api/(.*)$ index.php [QSA,L]
+# 2. Specific API Routing
+# This sends /api/quotes/ to /api/quotes/index.php
+RewriteRule ^api/quotes/?$ api/quotes/index.php [L,QSA]
+RewriteRule ^api/authors/?$ api/authors/index.php [L,QSA]
+RewriteRule ^api/categories/?$ api/categories/index.php [L,QSA]
+
+# 3. Optional: Fallback for the root UI
+# If they just type the URL, show the dashboard
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteRule ^index?$ index.php [L]
