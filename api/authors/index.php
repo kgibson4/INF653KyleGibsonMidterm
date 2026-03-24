@@ -22,7 +22,6 @@ switch($method) {
             if($row) {
                 echo json_encode(['id' => $row['id'], 'author' => $row['author']]);
             } else {
-                // Requirement: Specific error for GET
                 echo json_encode(["message" => "author_id Not Found"]);
             }
         } else {
@@ -34,7 +33,6 @@ switch($method) {
     case 'POST':
         $data = json_decode(file_get_contents("php://input"));
         if(!isset($data->author)) {
-            // Requirement: Missing Parameter check
             echo json_encode(["message" => "Missing Required Parameters"]);
             return;
         }
@@ -46,8 +44,6 @@ switch($method) {
 
     case 'PUT':
         $data = json_decode(file_get_contents("php://input"));
-        
-        // Requirement: Must contain id and author
         if(!isset($data->id) || !isset($data->author)) {
             echo json_encode(["message" => "Missing Required Parameters"]);
             break;
@@ -56,7 +52,6 @@ switch($method) {
         $author->id = $data->id;
         $author->author = $data->author;
 
-        // Requirement: Check if author exists. If not, return "author_id Not Found"
         if(!$author->read_single()->fetch()) {
             echo json_encode(["message" => "author_id Not Found"]);
             break;
@@ -75,7 +70,6 @@ switch($method) {
         }
         $author->id = $data->id;
 
-        // Requirement: Check if author exists. If not, return "author_id Not Found"
         if(!$author->read_single()->fetch()) {
             echo json_encode(["message" => "author_id Not Found"]);
             break;

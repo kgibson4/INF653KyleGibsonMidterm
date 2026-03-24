@@ -32,7 +32,6 @@ switch($method) {
 
     case 'POST':
         $data = json_decode(file_get_contents("php://input"));
-        // Requirement: MUST contain 'category'
         if(!isset($data->category)) {
             echo json_encode(["message" => "Missing Required Parameters"]);
             return;
@@ -46,7 +45,6 @@ switch($method) {
     case 'PUT':
         $data = json_decode(file_get_contents("php://input"));
         
-        // Requirement: MUST contain id and category
         if(!isset($data->id) || !isset($data->category)) {
             echo json_encode(["message" => "Missing Required Parameters"]);
             break;
@@ -55,7 +53,6 @@ switch($method) {
         $category->id = $data->id;
         $category->category = $data->category;
 
-        // Requirement: Check existence. If not found, return "No Quotes Found"
         if(!$category->read_single()->fetch()) {
             echo json_encode(["message" => "No Quotes Found"]);
             break;
@@ -74,7 +71,6 @@ switch($method) {
         }
         $category->id = $data->id;
 
-        // Requirement: Check existence. If not found, return "No Quotes Found"
         if(!$category->read_single()->fetch()) {
             echo json_encode(["message" => "No Quotes Found"]);
             break;
