@@ -26,30 +26,52 @@ class Author {
     }
 
     public function create() {
-        $query = "INSERT INTO " . $this->table . " (author) VALUES (:author) RETURNING id";
+        $query = "INSERT INTO " . $this->table . " (author) 
+                VALUES (:author) 
+                RETURNING id";
+                
         $stmt = $this->conn->prepare($query);
+
+        // Clean data
+        $this->author = htmlspecialchars(strip_tags($this->author));
+
+        // Bind data
         $stmt->bindParam(':author', $this->author);
 
         if ($stmt->execute()) {
-            $row = $stmt->fetch(PDO::FETCH_ASSOC);
-            $this->id = $row['id'];
+            // Fetch the returned ID directly from the result set
+            $result = $stmt->fetch(PDO::FETCH_ASSOC);
+            $this->id = $result['id'];
             return true;
         }
         return false;
     }
 
     public function update() {
-        $query = "UPDATE " . $this->table . " SET author = :author WHERE id = :id";
-        $stmt = $this->conn->prepare($query);
-        $stmt->bindParam(':id', $this->id);
-        $stmt->bindParam(':author', $this->author);
-        return $stmt->execute();
-    }
+    $query = "UPDATE " . $this->table . " SET author = :author WHERE id = :id";
+    $stmt = $this->conn->prepare($query);
+
+    // Clean data
+    $this->author = htmlspecialchars(strip_tags($this->author));
+    $this->id = htmlspecialchars(strip_tags($this->id));
+
+    // Bind data
+    $stmt->bindParam(':id', $this->id);
+    $stmt->bindParam(':author', $this->author);
+
+    return $stmt->execute();
+}
 
     public function delete() {
         $query = "DELETE FROM " . $this->table . " WHERE id = :id";
         $stmt = $this->conn->prepare($query);
+
+        // Clean data
+        $this->id = htmlspecialchars(strip_tags($this->id));
+
+        // Bind data
         $stmt->bindParam(':id', $this->id);
+
         return $stmt->execute();
     }
 }

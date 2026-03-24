@@ -22,7 +22,7 @@ switch($method) {
             if($row) {
                 echo json_encode(['id' => $row['id'], 'category' => $row['category']]);
             } else {
-                echo json_encode(["message" => "No Quotes Found"]);
+                echo json_encode(["message" => "category_id Not Found"]);
             }
         } else {
             $result = $category->read();
@@ -32,37 +32,53 @@ switch($method) {
 
     case 'POST':
         $data = json_decode(file_get_contents("php://input"));
-        // Requirement: MUST contain 'category'
-        if(!isset($data->category)) {
+
+        // Requirement: Check for missing parameters
+        if(!isset($data->category) || empty(trim($data->category))) {
             echo json_encode(["message" => "Missing Required Parameters"]);
             return;
         }
+
         $category->category = $data->category;
+
         if($category->create()) {
-            echo json_encode(['id' => $category->id, 'category' => $category->category]);
+            // SUCCESS: Return a single JSON object
+            echo json_encode([
+                "id" => $category->id,
+                "category" => $category->category
+            ]);
+        } else {
+            echo json_encode(["message" => "Category could not be created."]);
         }
     break;
 
     case 'PUT':
         $data = json_decode(file_get_contents("php://input"));
-        
-        // Requirement: MUST contain id and category
+
+        // 1. Check for missing parameters
         if(!isset($data->id) || !isset($data->category)) {
             echo json_encode(["message" => "Missing Required Parameters"]);
-            break;
+            return;
         }
 
         $category->id = $data->id;
         $category->category = $data->category;
 
-        // Requirement: Check existence. If not found, return "No Quotes Found"
+        // 2. REQUIREMENT: Check if category exists first
+        // If not found, return "No Quotes Found" (as per your initial requirement)
         if(!$category->read_single()->fetch()) {
             echo json_encode(["message" => "No Quotes Found"]);
-            break;
+            return;
         }
 
+        // 3. Perform update and return the SINGLE OBJECT
         if($category->update()) {
-            echo json_encode(["id" => $category->id, "category" => $category->category]);
+            echo json_encode([
+                "id" => $category->id,
+                "category" => $category->category
+            ]);
+        } else {
+            echo json_encode(["message" => "Category could not be updated."]);
         }
     break;
 

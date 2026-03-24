@@ -26,13 +26,22 @@ class Category {
     }
 
     public function create() {
-        $query = "INSERT INTO " . $this->table . " (category) VALUES (:category) RETURNING id";
+        $query = "INSERT INTO " . $this->table . " (category) 
+                VALUES (:category) 
+                RETURNING id";
+                
         $stmt = $this->conn->prepare($query);
+
+        // Clean data
+        $this->category = htmlspecialchars(strip_tags($this->category));
+
+        // Bind data
         $stmt->bindParam(':category', $this->category);
 
         if ($stmt->execute()) {
-            $row = $stmt->fetch(PDO::FETCH_ASSOC);
-            $this->id = $row['id'];
+            // Fetch the returned ID directly from the result set
+            $result = $stmt->fetch(PDO::FETCH_ASSOC);
+            $this->id = $result['id'];
             return true;
         }
         return false;
@@ -41,8 +50,15 @@ class Category {
     public function update() {
         $query = "UPDATE " . $this->table . " SET category = :category WHERE id = :id";
         $stmt = $this->conn->prepare($query);
+
+        // Clean data
+        $this->category = htmlspecialchars(strip_tags($this->category));
+        $this->id = htmlspecialchars(strip_tags($this->id));
+
+        // Bind data
         $stmt->bindParam(':id', $this->id);
         $stmt->bindParam(':category', $this->category);
+
         return $stmt->execute();
     }
 
